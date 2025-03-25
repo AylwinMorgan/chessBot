@@ -1,0 +1,16 @@
+# ide
+.idea/
+.vscode/
+.vs/
+out/
+build/
+cmake-**/
+
+# node
+**/package-lock.json
+
+
+
+
+
+.DS_Store
