@@ -1,7 +1,6 @@
-enum class Color std::uint8_t {
-	white = 0,
-	black = 1
-};
+#pragma once
+#include <unordered_set>
+#include "boardState.h"
 
 struct Move {
 	std::string from;
@@ -12,29 +11,29 @@ struct Move {
 
 struct Piece {
 	uint8_t color;
-	virtual std::vector<Move> getLegalMoves() = 0;
+	virtual std::unordered_set<Move> getLegalMoves(std::string* board, int row, int column) = 0;
 };
 
 struct Pawn : Piece {
-	std::vector<Move> getLegalMoves(std::string* board, int row, int column);
+	std::unordered_set<Move> getLegalMoves(std::string* board, int row, int column);
 };
 
 struct Rook : Piece {
-	std::vector<Move> getLegalMoves();
+	std::unordered_set<Move> getLegalMoves(std::string* board, int row, int column);
 };
 
 struct Knight : Piece {
-	std::vector<Move> getLegalMoves();
+	std::unordered_set<Move> getLegalMoves(std::string* board, int row, int column);
 };
 
 struct Bishop : Piece {
-	std::vector<Move> getLegalMoves();
+	std::unordered_set<Move> getLegalMoves(std::string* board, int row, int column);
 };
 
 struct Queen : Piece {
-	std::vector<Move> getLegalMoves();
+	std::unordered_set<Move> getLegalMoves(std::string* board, int row, int column);
 };
 
 struct King : Piece {
-	std::vector<Move> getLegalMoves();
+	std::unordered_set<Move> getLegalMoves(std::string* board, int row, int column);
 };

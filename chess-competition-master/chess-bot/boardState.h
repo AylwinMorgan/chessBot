@@ -1,35 +1,39 @@
 #pragma once
+#include <string>
+#include <ctype.h>
 
-
-enum class Pieces: std::char {
-	BLACK_PAWN = "p",
-	BLACK_ROOK = "r",
-	BLACK_KNIGHT = "n",
-	BLACK_BISHOP = "b",
-	BLACK_QUEEN = "q",
-	BLACK_KING = "k",
-	WHITE_PAWN = "P",
-	WHITE_ROOK = "R",
-	WHITE_KNIGHT = "N",
-	WHITE_BISHOP = "B",
-	WHITE_QUEEN = "Q",
-	WHITE_KING = "K"
+/*  optimizations can be done later after a basic engine is set up
+enum class Pieces: std::uint8_t {
+	EMPTY = 0b000,
+	PAWN = 0b001,
+	KNIGHT = 0b010,
+	BISHOP = 0b011,
+	ROOK = 0b100,
+	QUEEN = 0b101,
+	KING = 0b110
 };
 
-class BoardState {
-	std::string board[8];
-	static const inline std::string startingBoard[8] = {
-		"rnbqkbnr",
-		"pppppppp",
-		"8",
-		"8",
-		"8",
-		"8",
-		"PPPPPPPP",
-		"RNBQKBNR"
-	}
+enum class Color std::uint8_t {
+	white = 0,
+	black = 1
+};
 
-	void setBoard(std::string[8] state = startingBoard);
+struct Square : uint8_t {
+	Color color:0;
+
+};
+
+struct Board {
+
+};
+*/
+class BoardState {
+	BoardState();
+	BoardState(std::string fen);
+	std::string board;
+	std::string getColumnLetter(int column);
+	std::string getUCINotation(int startRow, int startColumn, int endRow, int endColumn);
+	std::string getPieceAtSquare(int row, int column);
 
 	int halfTurnCount = 0;
 	int fullTurnCount = 0;
