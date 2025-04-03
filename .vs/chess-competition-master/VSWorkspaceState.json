@@ -1,0 +1,8 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "chess-competition-master\\out\\build\\x64-Debug",
+      "chess-competition-master\\out\\install\\x64-Debug"
+    ]
+  }
+}

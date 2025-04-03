@@ -8,7 +8,7 @@ BoardState::BoardState(std::string fen) {
 	board = fen;
 }
 
-std::string getColumnLetter(int column) {
+std::string BoardState::getColumnLetter(int column) {
 	switch (column) {
 		case 0:
 			return "a";
@@ -29,13 +29,14 @@ std::string getColumnLetter(int column) {
 	}
 }
 
-std::string getUCINotation(int startRow, int startColumn, int endRow, int endColumn) {
-	return getColumnLetter(startColumn) + std::to_string(startRow+1) + getColumnLetter(endColumn) + std::to_string(endRow+1);
+std::string BoardState::getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = '\0') {
+	return getColumnLetter(startColumn) + std::to_string(startRow+1) + getColumnLetter(endColumn) + std::to_string(endRow+1) + promotion;
 }
 
 char BoardState::getPieceAtSquare(int row, int column) {
+	// go from top left to bottom right until desired square is reached
 	int currentColumn = 0;
-	int currentRow = 0;
+	int currentRow = 7;
 	for (int i = 0; i < board.length(); i++) {
 		char c = board[i];
 		if (currentColumn == column && currentRow == row) {
@@ -43,7 +44,7 @@ char BoardState::getPieceAtSquare(int row, int column) {
 		}
 		if (c == '/') {
 			// go to next row, reset column
-			currentRow++;
+			currentRow--;
 			currentColumn = 0;
 		}
 		else if (isdigit(c)) {

@@ -5,8 +5,69 @@
 #include <random>
 using namespace ChessSimulator;
 
-std::string* ChessSimulator::Move(std::string fen) {
+std::unordered_set<std::string> ChessSimulator::getLegalMoves(BoardState board, int row, int column) {
+	char piece = board.getPieceAtSquare(row, column);
+	if (!isalpha(piece)) {
+		return std::unordered_set<std::string>;
+	}
+	uint8_t color = Color.white;
+	char p;
+	Piece pieceStruct;
+	if (islower(piece)){
+		color = Color.black;
+	}
+	p = toupper(piece);
+	switch (piece)
+	{
+		case 'P':
+			Pawn pawn;
+			pieceStruct = pawn;
+			break;
+		case 'R':
+			Rook rook;
+			pieceStruct = rook;
+			break;
+		case 'N':
+			Knight knight;
+			pieceStruct = knight;
+			break;
+		case 'B':
+			Bishop bishop;
+			pieceStruct = bishop;
+			break;
+		case 'Q':
+			Queen queen;
+			pieceStruct = queen;
+			break;
+		case 'K':
+			King king;
+			pieceStruct = king;
+			break;
+	}
+	pieceStruct.color = color;
+	return pieceStruct.getLegalMoves(row,column);
+}
+
+std::string ChessSimulator::Move(std::string fen) {
+	std::srand(std::time(nullptr));
+	// get all pieces,
+    // for each piece:
+    // get all legal moves
+    // pick a random move from this set
+	std::unordered_set<std::string> allMoves;
 	BoardState board(fen);
+	Piece::board = board;
+	for (int i = 0; i < 8; i++) {
+		for (j = 0; j < 8; j++){
+			allMoves.merge(getLegalMoves(board, i, j));
+		}
+	}
+
+	auto iterator = allMoves.begin();
+	std::advance(iterator, rand() % allMoves.size());
+
+	return *iterator;
+
 }
 
   // create your board based on the board string following the FEN notation

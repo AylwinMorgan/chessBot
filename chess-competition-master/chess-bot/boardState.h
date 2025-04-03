@@ -13,11 +13,6 @@ enum class Pieces: std::uint8_t {
 	KING = 0b110
 };
 
-enum class Color std::uint8_t {
-	white = 0,
-	black = 1
-};
-
 struct Square : uint8_t {
 	Color color:0;
 
@@ -32,8 +27,8 @@ class BoardState {
 	BoardState(std::string fen);
 	std::string board;
 	std::string getColumnLetter(int column);
-	std::string getUCINotation(int startRow, int startColumn, int endRow, int endColumn);
-	std::string getPieceAtSquare(int row, int column);
+	std::string getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = '\0');
+	char getPieceAtSquare(int row, int column);
 
 	int halfTurnCount = 0;
 	int fullTurnCount = 0;
