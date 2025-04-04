@@ -8,44 +8,46 @@ using namespace ChessSimulator;
 std::unordered_set<std::string> ChessSimulator::getLegalMoves(BoardState board, int row, int column) {
 	char piece = board.getPieceAtSquare(row, column);
 	if (!isalpha(piece)) {
-		return std::unordered_set<std::string>;
+		return std::unordered_set<std::string>();
 	}
-	uint8_t color = Color.white;
+	Color color = Color::white;
 	char p;
-	Piece pieceStruct;
+	Piece* pieceStruct;
 	if (islower(piece)){
-		color = Color.black;
+		color = Color::black;
 	}
 	p = toupper(piece);
 	switch (piece)
 	{
 		case 'P':
-			Pawn pawn;
+			Pawn* pawn = new Pawn();
 			pieceStruct = pawn;
 			break;
 		case 'R':
-			Rook rook;
+			Rook* rook = new Rook();
 			pieceStruct = rook;
 			break;
 		case 'N':
-			Knight knight;
+			Knight* knight = new Knight();
 			pieceStruct = knight;
 			break;
 		case 'B':
-			Bishop bishop;
+			Bishop* bishop = new Bishop();
 			pieceStruct = bishop;
 			break;
 		case 'Q':
-			Queen queen;
+			Queen* queen = new Queen();
 			pieceStruct = queen;
 			break;
 		case 'K':
-			King king;
+			King* king = new King();
 			pieceStruct = king;
 			break;
 	}
-	pieceStruct.color = color;
-	return pieceStruct.getLegalMoves(row,column);
+	pieceStruct->color = color;
+	std::unordered_set<std::string> moves = pieceStruct->getLegalMoves(row,column);
+	delete pieceStruct;
+	return moves;
 }
 
 std::string ChessSimulator::Move(std::string fen) {
@@ -58,7 +60,7 @@ std::string ChessSimulator::Move(std::string fen) {
 	BoardState board(fen);
 	Piece::board = board;
 	for (int i = 0; i < 8; i++) {
-		for (j = 0; j < 8; j++){
+		for (int j = 0; j < 8; j++){
 			allMoves.merge(getLegalMoves(board, i, j));
 		}
 	}

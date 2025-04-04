@@ -29,8 +29,9 @@ std::string BoardState::getColumnLetter(int column) {
 	}
 }
 
-std::string BoardState::getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = '\0') {
-	return getColumnLetter(startColumn) + std::to_string(startRow+1) + getColumnLetter(endColumn) + std::to_string(endRow+1) + promotion;
+std::string BoardState::getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion) {
+	std::string notation = getColumnLetter(startColumn) + std::to_string(startRow+1) + getColumnLetter(endColumn) + std::to_string(endRow+1) + promotion;
+	return notation;
 }
 
 char BoardState::getPieceAtSquare(int row, int column) {

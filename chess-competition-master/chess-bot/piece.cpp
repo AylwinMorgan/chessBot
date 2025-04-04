@@ -14,10 +14,10 @@ bool Piece::squareIsValid(int row, int column) {
 	// opposite color spaces are valid
 	uint8_t squareColor;
 	if (isupper(content)) {
-		squareColor = Color.white;
+		squareColor = Color::white;
 	}
 	else {
-		squareColor = Color.black;
+		squareColor = Color::black;
 	}
 
 	if (color != squareColor) {
@@ -35,11 +35,11 @@ void Piece::addPieceIfSquareIsValid(int row, int column, std::unordered_set<std:
 
 std::unordered_set<std::string> Pawn::getLegalMoves(int row, int column) {
 	std::unordered_set<std::string> legalMoves;
-	if (color == Color.white) {
+	if (color == Color::white) {
 		// check next row
 		char nextRow = board.getPieceAtSquare(row + 1, column);
 		if (nextRow == '-') {
-			char promotion = '\0';
+			char promotion = 0;
 			if (row == 6) {
 				promotion = 'q';
 			}

@@ -23,11 +23,12 @@ struct Board {
 };
 */
 class BoardState {
+	public:
 	BoardState();
 	BoardState(std::string fen);
 	std::string board;
 	std::string getColumnLetter(int column);
-	std::string getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = '\0');
+	std::string getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = 0);
 	char getPieceAtSquare(int row, int column);
 
 	int halfTurnCount = 0;

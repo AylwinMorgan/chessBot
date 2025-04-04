@@ -9,13 +9,13 @@ struct Move {
 	std::string promotion;
 };
 
-enum class Color std::uint8_t {
+enum class Color: std::uint8_t {
 	white = 0,
 	black = 1
 };
 
 struct Piece {
-	uint8_t color;
+	Color color;
 	virtual std::unordered_set<std::string> getLegalMoves(int row, int column) = 0;
 	bool squareIsValid(int row, int column);
 	void addPieceIfSquareIsValid(int row, int column, std::unordered_set<std::string>& set);
