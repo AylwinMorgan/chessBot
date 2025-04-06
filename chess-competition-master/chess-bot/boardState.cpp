@@ -26,6 +26,8 @@ std::string BoardState::getColumnLetter(int column) {
 			return "g";
 		case 7:
 			return "h";
+		default:
+			return "-";
 	}
 }
 
@@ -40,6 +42,9 @@ char BoardState::getPieceAtSquare(int row, int column) {
 	int currentRow = 7;
 	for (int i = 0; i < board.length(); i++) {
 		char c = board[i];
+		if (c == ' ') {
+			continue;
+		}
 		if (currentColumn == column && currentRow == row) {
 			return c;
 		}

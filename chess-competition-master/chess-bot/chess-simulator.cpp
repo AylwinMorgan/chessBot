@@ -1,48 +1,64 @@
 #include "chess-simulator.h"
 // disservin's lib. drop a star on his hard work!
 // https://github.com/Disservin/chess-library
-#include "chess.hpp"
+//#include "chess.hpp"
 #include <random>
 using namespace ChessSimulator;
 
-std::unordered_set<std::string> ChessSimulator::getLegalMoves(BoardState board, int row, int column) {
+std::unordered_set<std::string> ChessSimulator::getLegalMoves(BoardState board, int row, int column, bool whiteToMove) {
 	char piece = board.getPieceAtSquare(row, column);
 	if (!isalpha(piece)) {
 		return std::unordered_set<std::string>();
 	}
+	bool pieceIsCorrectColor = true;
 	Color color = Color::white;
 	char p;
-	Piece* pieceStruct;
+	Piece* pieceStruct = new Pawn();
 	if (islower(piece)){
 		color = Color::black;
+		if (whiteToMove) {
+			pieceIsCorrectColor = false;
+		}
 	}
 	p = toupper(piece);
-	switch (piece)
-	{
-		case 'P':
-			Pawn* pawn = new Pawn();
-			pieceStruct = pawn;
-			break;
-		case 'R':
-			Rook* rook = new Rook();
-			pieceStruct = rook;
-			break;
-		case 'N':
-			Knight* knight = new Knight();
-			pieceStruct = knight;
-			break;
-		case 'B':
-			Bishop* bishop = new Bishop();
-			pieceStruct = bishop;
-			break;
-		case 'Q':
-			Queen* queen = new Queen();
-			pieceStruct = queen;
-			break;
-		case 'K':
-			King* king = new King();
-			pieceStruct = king;
-			break;
+	if (pieceIsCorrectColor){
+		switch (piece)
+		{
+			case 'P':
+			{
+				break;
+			}
+			case 'R':
+			{
+				Rook* rook = new Rook();
+				pieceStruct = rook;
+				break;
+			}
+			case 'N':
+			{
+				Knight* knight = new Knight();
+				pieceStruct = knight;
+				break;
+			}
+			case 'B':
+			{
+				Bishop* bishop = new Bishop();
+				pieceStruct = bishop;
+				break;
+			}
+			case 'Q':
+			{
+				Queen* queen = new Queen();
+				pieceStruct = queen;
+				break;
+			}
+			case 'K':
+			{
+				King* king = new King();
+				pieceStruct = king;
+				break;
+			}
+		}
 	}
 	pieceStruct->color = color;
 	std::unordered_set<std::string> moves = pieceStruct->getLegalMoves(row,column);
@@ -58,10 +74,12 @@ std::string ChessSimulator::Move(std::string fen) {
     // pick a random move from this set
 	std::unordered_set<std::string> allMoves;
 	BoardState board(fen);
+	bool whiteToMove = fen.find('w') != std::string::npos;
 	Piece::board = board;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++){
-			allMoves.merge(getLegalMoves(board, i, j));
+			std::unordered_set<std::string> newMoves = getLegalMoves(board,i,j, whiteToMove);
+			allMoves.insert(newMoves.begin(), newMoves.end());
 		}
 	}
 
@@ -96,4 +114,3 @@ std::string ChessSimulator::Move(std::string fen) {
   //std::uniform_int_distribution<> dist(0, moves.size() - 1);
   //auto move = moves[dist(gen)];
   //return chess::uci::moveToUci(move);
-}

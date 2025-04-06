@@ -12,7 +12,7 @@ bool Piece::squareIsValid(int row, int column) {
 		return true;
 	}
 	// opposite color spaces are valid
-	uint8_t squareColor;
+	Color squareColor;
 	if (isupper(content)) {
 		squareColor = Color::white;
 	}
@@ -52,10 +52,12 @@ std::unordered_set<std::string> Pawn::getLegalMoves(int row, int column) {
 			}
 		}
 		// check diagonals in next row for black pieces
-		if (squareIsValid(row+1, column-1)) {
+		char diagonalLeft = board.getPieceAtSquare(row+1, column - 1);
+		if ( squareIsValid(row+1, column-1) && diagonalLeft != '-') {
 			legalMoves.insert(board.getUCINotation(row,column,row+1,column-1));
 		}
-		if (squareIsValid(row+1,column+1)) {
+		char diagonalRight = board.getPieceAtSquare(row+1, column + 1);
+		if (squareIsValid(row+1,column+1) && diagonalRight != '-') {
 			legalMoves.insert(board.getUCINotation(row, column, row + 1, column + 1));
 		}
 	}
@@ -78,13 +80,14 @@ std::unordered_set<std::string> Pawn::getLegalMoves(int row, int column) {
 		// check diagonals in next row for white pieces
 		char diagonalLeft = board.getPieceAtSquare(row - 1, column - 1);
 		char diagonalRight = board.getPieceAtSquare(row - 1, column + 1);
-		if (squareIsValid(row-1,column-1)) {
+		if (squareIsValid(row-1,column-1) && diagonalLeft != '-') {
 			legalMoves.insert(board.getUCINotation(row, column, row - 1, column - 1));
 		}
-		if (squareIsValid(row-1,column+1)) {
+		if (squareIsValid(row-1,column+1) && diagonalRight != '-') {
 			legalMoves.insert(board.getUCINotation(row, column, row - 1, column + 1));
 		}
 	}
+	return legalMoves;
 }
 
 std::unordered_set<std::string> Rook::getLegalMoves(int row, int column) {
