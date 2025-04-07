@@ -1,11 +1,40 @@
 #include "boardState.h"
 
+BoardState::~BoardState() {
+	//delete boardArray;
+}
+
 BoardState::BoardState() {
 	board = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 }
 
+// setup boardArray by filling it with chars
 BoardState::BoardState(std::string fen) {
 	board = fen;
+	// fills an array with characters to represent the board
+	// IMPORTANT: the top row is row 8 in chess so start from the bottom of the array and work upwards
+	int currentRow = 7;
+	int currentColumn = 0;
+	for (int i = 0; i < fen.length(); i++) {
+		char c = fen[i];
+		if (currentColumn > 7) {
+			currentColumn = 0;
+			currentRow--;
+		}
+		if (currentRow < 0) {
+			break;
+		}	
+		if (isalpha(c)){
+			boardArray[currentRow][currentColumn] = c;
+			currentColumn++;
+		}
+		else if (isdigit(c)) {
+			for (int j = 0; j < (int)(c - '0'); j++) {
+				boardArray[currentRow][currentColumn] = '-';
+				currentColumn++;
+			}
+		}
+	}
 }
 
 std::string BoardState::getColumnLetter(int column) {
@@ -31,36 +60,15 @@ std::string BoardState::getColumnLetter(int column) {
 	}
 }
 
-std::string BoardState::getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion) {
-	std::string notation = getColumnLetter(startColumn) + std::to_string(startRow+1) + getColumnLetter(endColumn) + std::to_string(endRow+1) + promotion;
+ChessMove BoardState::getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion) {
+	ChessMove notation;
+	notation.from = getColumnLetter(startColumn) + std::to_string(startRow+1);
+	notation.to = getColumnLetter(endColumn) + std::to_string(endRow+1);
+	notation.promotion = promotion;
 	return notation;
 }
 
+
 char BoardState::getPieceAtSquare(int row, int column) {
-	// go from top left to bottom right until desired square is reached
-	int currentColumn = 0;
-	int currentRow = 7;
-	for (int i = 0; i < board.length(); i++) {
-		char c = board[i];
-		if (c == ' ') {
-			continue;
-		}
-		if (currentColumn == column && currentRow == row) {
-			return c;
-		}
-		if (c == '/') {
-			// go to next row, reset column
-			currentRow--;
-			currentColumn = 0;
-		}
-		else if (isdigit(c)) {
-			currentColumn += c - '0';
-			if (currentRow == row && currentColumn >= column) {
-				return '-';
-			}
-		}
-		else {
-			currentColumn++;
-		}
-	}
+	return boardArray[row][column];
 }
