@@ -59,7 +59,7 @@ std::unordered_set<ChessMove> Pawn::getLegalMoves(int row, int column) {
 		// check next row
 		char nextRow = board.getPieceAtSquare(row - 1, column);
 		if (nextRow == '-') {
-			char promotion = '\0';
+			char promotion = '0';
 			if (row == 1) {
 				promotion = 'q';
 			}

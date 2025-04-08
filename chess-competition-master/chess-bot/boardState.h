@@ -26,7 +26,7 @@ struct ChessMove {
 	std::string from;
 	std::string to;
 
-	std::string promotion;
+	std::string promotion = "";
 
 	bool operator==(const ChessMove& other) const {
 		return (from == other.from && to == other.to && promotion == other.promotion);

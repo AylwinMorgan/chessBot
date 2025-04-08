@@ -9,7 +9,13 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 	// get a potential board state based on the move and see if the king of 'color' is in check
 	// do this by looking at all enemy pieces and checking if any of their legal moves end at the 'color' king's position
 	bool kingIsReached = false;
-	BoardState newBoard = board;
+	BoardState* newBoard = new BoardState;
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			newBoard->boardArray[i][j] = board.boardArray[i][j];
+		}
+	}
 
 	int fromColumn = (int)move.from[0] - (int)'a';
 	int fromRow = (int)move.from[1];
@@ -18,9 +24,9 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 	int toRow = (int)move.to[1];
 
 	// set ChessMove.to in the new board to be the piece at ChessMove.from
-	newBoard.boardArray[toRow][toColumn] = newBoard.boardArray[fromRow][fromColumn];
+	newBoard->boardArray[toRow][toColumn] = newBoard->boardArray[fromRow][fromColumn];
 	// set ChessMove.from in the new board to empty
-	newBoard.boardArray[fromRow][fromColumn] = '-';
+	newBoard->boardArray[fromRow][fromColumn] = '-';
 
 	// get all 
 	bool wtm = color == Color::black;
@@ -32,7 +38,7 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 	// find the king
 	for (kingRow = 0; kingRow < 8; kingRow++) {
 		for (kingColumn = 0; kingColumn < 8; kingColumn++) {
-			char square = newBoard.boardArray[kingRow][kingColumn];
+			char square = newBoard->boardArray[kingRow][kingColumn];
 			if (((color == Color::white && isupper(square)) || (color == Color::black && islower(square))) && tolower(square) == 'k') {
 				kingColumnString = board.getColumnLetter(kingColumn);
 				break;
@@ -44,15 +50,17 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			// get all moves that the enemy piece can do on the new board
-			std::unordered_set<ChessMove> enemyMoves = getLegalMoves(newBoard, i, j, wtm, false);
+			std::unordered_set<ChessMove> enemyMoves = getLegalMoves(*newBoard, i, j, wtm, false);
 			// if any of the moves end on the king's square, return false
 			for (ChessMove move : enemyMoves) {
 				if (move.to == kingColumnString + std::to_string(kingRow)) {
+					delete newBoard;
 					return false;
 				}
 			}
 		}
 	}
+	delete newBoard;
 	return false;
 }
 
@@ -153,7 +161,8 @@ std::string ChessSimulator::Move(std::string fen) {
 
 	ChessMove move = *iterator;
 
-	return move.from + move.to + move.promotion;
+	std::string finalMove = move.from + move.to + move.promotion;
+	return finalMove;
 
 }
 

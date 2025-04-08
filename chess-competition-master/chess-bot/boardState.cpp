@@ -64,7 +64,9 @@ ChessMove BoardState::getUCINotation(int startRow, int startColumn, int endRow, 
 	ChessMove notation;
 	notation.from = getColumnLetter(startColumn) + std::to_string(startRow+1);
 	notation.to = getColumnLetter(endColumn) + std::to_string(endRow+1);
-	notation.promotion = promotion;
+	if (promotion != 0){
+		notation.promotion = promotion;
+	}
 	return notation;
 }
 
