@@ -1,4 +1,5 @@
 #include "boardState.h"
+#include "iostream"
 
 BoardState::~BoardState() {
 	//delete boardArray;
@@ -25,12 +26,12 @@ BoardState::BoardState(std::string fen) {
 			break;
 		}	
 		if (isalpha(c)){
-			boardArray[currentRow][currentColumn] = c;
+			boardArray.push_back(c);
 			currentColumn++;
 		}
 		else if (isdigit(c)) {
 			for (int j = 0; j < (int)(c - '0'); j++) {
-				boardArray[currentRow][currentColumn] = '-';
+				boardArray.push_back('-');
 				currentColumn++;
 			}
 		}
@@ -72,5 +73,9 @@ ChessMove BoardState::getUCINotation(int startRow, int startColumn, int endRow, 
 
 
 char BoardState::getPieceAtSquare(int row, int column) {
-	return boardArray[row][column];
+	if (row < 0 || row > 7 || column < 0 || column > 7) {
+		//std::cout << "out of bounds";
+		return '-';
+	}
+	return boardArray[(7 - row) * 8 + column];
 }

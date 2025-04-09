@@ -13,20 +13,20 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
-			newBoard->boardArray[i][j] = board.boardArray[i][j];
+			newBoard->boardArray.push_back(board.boardArray[(7 - i) * 8 + j]);
 		}
 	}
 
 	int fromColumn = (int)move.from[0] - (int)'a';
-	int fromRow = (int)move.from[1];
+	int fromRow = (int)move.from[1] - (int)'1';
 
 	int toColumn = (int)move.to[0] - (int)'a';
-	int toRow = (int)move.to[1];
+	int toRow = (int)move.to[1] - (int)'1';
 
 	// set ChessMove.to in the new board to be the piece at ChessMove.from
-	newBoard->boardArray[toRow][toColumn] = newBoard->boardArray[fromRow][fromColumn];
+	newBoard->boardArray[(7 - toRow) * 8 + toColumn] = newBoard->boardArray[fromRow * 8 + fromColumn];
 	// set ChessMove.from in the new board to empty
-	newBoard->boardArray[fromRow][fromColumn] = '-';
+	newBoard->boardArray[(7 - fromRow) * 8 + fromColumn] = '-';
 
 	// get all 
 	bool wtm = color == Color::black;
@@ -38,7 +38,7 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 	// find the king
 	for (kingRow = 0; kingRow < 8; kingRow++) {
 		for (kingColumn = 0; kingColumn < 8; kingColumn++) {
-			char square = newBoard->boardArray[kingRow][kingColumn];
+			char square = newBoard->boardArray[(7 - kingRow) * 8 + kingColumn];
 			if (((color == Color::white && isupper(square)) || (color == Color::black && islower(square))) && tolower(square) == 'k') {
 				kingColumnString = board.getColumnLetter(kingColumn);
 				break;
@@ -85,7 +85,7 @@ std::unordered_set<ChessMove> ChessSimulator::getLegalMoves(BoardState board, in
 	}
 	p = toupper(piece);
 	if (pieceIsCorrectColor){
-		switch (piece)
+		switch (p)
 		{
 			case 'P':
 			{

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <ctype.h>
+#include <vector>
 
 /*  optimizations can be done later after a basic engine is set up
 enum class Pieces: std::uint8_t {
@@ -57,7 +58,7 @@ class BoardState {
 	BoardState();
 	BoardState(std::string fen);
 	std::string board;
-	char boardArray[8][8] = {};
+	std::vector<char> boardArray;
 	std::string getColumnLetter(int column);
 	ChessMove getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = 0);
 	char getPieceAtSquare(int row, int column);
