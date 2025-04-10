@@ -28,6 +28,8 @@ EM_JS(int, canvas_get_height, (), { return canvas.height; });
 #include <chrono>
 #include <map>
 
+#include <iostream>
+
 enum class SimulationState {
   PAUSED,
   RUNNING,
@@ -80,6 +82,7 @@ void move(chess::Board &board) {
   // update stats
   timeSpentOnMoves += afterTime - beforeTime;
   timeSpentLastMove = afterTime - beforeTime;
+  std::cout << std::to_string(board.fullMoveNumber()) + " " + turn + ": " + moveStr << endl;
   moves.push_back(std::to_string(board.fullMoveNumber()) + " " + turn + ": " +
                   moveStr);
 }

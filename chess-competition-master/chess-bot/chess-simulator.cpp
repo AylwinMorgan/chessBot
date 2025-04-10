@@ -43,13 +43,13 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 			char square = newBoard->boardArray.at((7 - kingRow) * 8 + kingColumn);
 			if (((color == Color::white && isupper(square)) || (color == Color::black && islower(square))) && tolower(square) == 'k') {
 				kingColumnString = board.getColumnLetter(kingColumn);
-				kingRowString = std::to_string(7 - kingRow);
+				kingRowString = std::to_string(kingRow + 1);
 				//std::cout << "king found at: " << kingColumnString << kingRowString << std::endl;
-				break;
+				goto end_loop;
 			}
 		}
 	}
-
+	end_loop:
 
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
@@ -170,7 +170,7 @@ std::string ChessSimulator::Move(std::string fen) {
     // pick a random move from this set
 	std::unordered_set<ChessMove> allMoves;
 	BoardState board(fen);
-	//std::string tempFen = "1rbqkb1r / p2nppp1 / 3p1n2 / 1P5p / N2pPP1P / Q5P1 / PP3K2 / R1B1NB1R b - e3 0 15";
+	//std::string tempFen = "r1b1nb1r / 2p4q / 3n2p1 / pp1pP2p / PPPP1PkP / 6pR / 3K4 / R1BQNB2 b - e3 0 15";
 	//BoardState board(tempFen);
 	bool whiteToMove = fen.find('w') != std::string::npos;
 	for (int i = 0; i < 8; i++) {
