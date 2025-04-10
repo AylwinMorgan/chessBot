@@ -3,6 +3,7 @@
 // https://github.com/Disservin/chess-library
 //#include "chess.hpp"
 #include <random>
+#include <iostream>
 using namespace ChessSimulator;
 
 bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color) {
@@ -13,20 +14,20 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
-			newBoard->boardArray.push_back(board.boardArray[(7 - i) * 8 + j]);
+			newBoard->boardArray.push_back(board.boardArray.at(i * 8 + j));
 		}
 	}
 
-	int fromColumn = (int)move.from[0] - (int)'a';
-	int fromRow = (int)move.from[1] - (int)'1';
+	int fromColumn = (int)move.from.at(0) - (int)'a';
+	int fromRow = (int)move.from.at(1) - (int)'1';
 
-	int toColumn = (int)move.to[0] - (int)'a';
-	int toRow = (int)move.to[1] - (int)'1';
+	int toColumn = (int)move.to.at(0) - (int)'a';
+	int toRow = (int)move.to.at(1) - (int)'1';
 
 	// set ChessMove.to in the new board to be the piece at ChessMove.from
-	newBoard->boardArray[(7 - toRow) * 8 + toColumn] = newBoard->boardArray[fromRow * 8 + fromColumn];
+	newBoard->boardArray.at((7 - toRow) * 8 + toColumn) = newBoard->boardArray.at((7 - fromRow) * 8 + fromColumn);
 	// set ChessMove.from in the new board to empty
-	newBoard->boardArray[(7 - fromRow) * 8 + fromColumn] = '-';
+	newBoard->boardArray.at((7 - fromRow) * 8 + fromColumn) = '-';
 
 	// get all 
 	bool wtm = color == Color::black;
@@ -34,13 +35,16 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 	int kingRow;
 	int kingColumn;
 	std::string kingColumnString;
+	std::string kingRowString;
 
 	// find the king
 	for (kingRow = 0; kingRow < 8; kingRow++) {
 		for (kingColumn = 0; kingColumn < 8; kingColumn++) {
-			char square = newBoard->boardArray[(7 - kingRow) * 8 + kingColumn];
+			char square = newBoard->boardArray.at((7 - kingRow) * 8 + kingColumn);
 			if (((color == Color::white && isupper(square)) || (color == Color::black && islower(square))) && tolower(square) == 'k') {
 				kingColumnString = board.getColumnLetter(kingColumn);
+				kingRowString = std::to_string(7 - kingRow);
+				//std::cout << "king found at: " << kingColumnString << kingRowString << std::endl;
 				break;
 			}
 		}
@@ -51,29 +55,41 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 		for (int j = 0; j < 8; j++) {
 			// get all moves that the enemy piece can do on the new board
 			std::unordered_set<ChessMove> enemyMoves = getLegalMoves(*newBoard, i, j, wtm, false);
-			// if any of the moves end on the king's square, return false
+			// if any of the moves end on the king's square, return true
 			for (ChessMove move : enemyMoves) {
-				if (move.to == kingColumnString + std::to_string(kingRow)) {
+				if (move.to == kingColumnString + kingRowString) {
+					newBoard = nullptr;
 					delete newBoard;
-					return false;
+					return true;
 				}
 			}
 		}
 	}
+	newBoard = nullptr;
 	delete newBoard;
 	return false;
 }
 
 
 std::unordered_set<ChessMove> ChessSimulator::getLegalMoves(BoardState board, int row, int column, bool whiteToMove, bool considerCheck) {
+
 	char piece = board.getPieceAtSquare(row, column);
 	if (!isalpha(piece)) {
 		return std::unordered_set<ChessMove>();
 	}
+	Pawn* pawn = new Pawn();
+	Rook* rook = new Rook();
+	Knight* knight = new Knight();
+	Bishop* bishop = new Bishop();
+	Queen* queen = new Queen();
+	King* king = new King();
+
 	bool pieceIsCorrectColor = whiteToMove;
 	Color color = Color::white;
 	char p;
-	Piece* pieceStruct = new Pawn();
+	std::unordered_set<ChessMove> moves = std::unordered_set<ChessMove>();
+
+	Piece* pieceStruct;
 	if (islower(piece)){
 		color = Color::black;
 		if (whiteToMove) {
@@ -89,53 +105,61 @@ std::unordered_set<ChessMove> ChessSimulator::getLegalMoves(BoardState board, in
 		{
 			case 'P':
 			{
+			    pieceStruct = pawn;
 				break;
 			}
 			case 'R':
 			{
-				Rook* rook = new Rook();
 				pieceStruct = rook;
 				break;
 			}
 			case 'N':
 			{
-				Knight* knight = new Knight();
 				pieceStruct = knight;
 				break;
 			}
 			case 'B':
 			{
-				Bishop* bishop = new Bishop();
 				pieceStruct = bishop;
 				break;
 			}
 			case 'Q':
 			{
-				Queen* queen = new Queen();
 				pieceStruct = queen;
 				break;
 			}
 			case 'K':
 			{
-				King* king = new King();
 				pieceStruct = king;
 				break;
 			}
+			default:
+			{
+				pieceStruct = pawn;
+			}
 		}
-	pieceStruct->color = color;
-	std::unordered_set<ChessMove> moves = pieceStruct->getLegalMoves(row,column);
-	if (considerCheck) {
-		for (ChessMove move : moves) {
-			if (kingIsInCheck(board, move, color)) {
+		pieceStruct->color = color;
+		moves = pieceStruct->getLegalMoves(row,column,board);
+		std::unordered_set<ChessMove> toDelete;
+		if (considerCheck) {
+			for (ChessMove move : moves) {
+				if (kingIsInCheck(board, move, color)) {
+					toDelete.insert(move);
+					//moves.erase(move);
+				}
+			}
+			for (ChessMove move : toDelete) {
 				moves.erase(move);
 			}
 		}
 	}
-	delete pieceStruct;
+	delete pawn;
+	delete rook;
+	delete bishop;
+	delete knight;
+	delete queen;
+	delete king;
 	return moves;
-	}
-	delete pieceStruct;
-	return std::unordered_set<ChessMove>();
 }
 
 std::string ChessSimulator::Move(std::string fen) {
@@ -146,8 +170,9 @@ std::string ChessSimulator::Move(std::string fen) {
     // pick a random move from this set
 	std::unordered_set<ChessMove> allMoves;
 	BoardState board(fen);
+	//std::string tempFen = "1rbqkb1r / p2nppp1 / 3p1n2 / 1P5p / N2pPP1P / Q5P1 / PP3K2 / R1B1NB1R b - e3 0 15";
+	//BoardState board(tempFen);
 	bool whiteToMove = fen.find('w') != std::string::npos;
-	Piece::board = board;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++){
 
@@ -157,13 +182,15 @@ std::string ChessSimulator::Move(std::string fen) {
 	}
 
 	auto iterator = allMoves.begin();
-	std::advance(iterator, rand() % allMoves.size());
+	if (allMoves.size() > 0){
+    	std::advance(iterator, rand() % allMoves.size());
 
-	ChessMove move = *iterator;
+    	ChessMove move = *iterator;
 
-	std::string finalMove = move.from + move.to + move.promotion;
-	return finalMove;
-
+    	std::string finalMove = move.from + move.to + move.promotion;
+	    return finalMove;
+	}
+	return "";
 }
 
   // create your board based on the board string following the FEN notation

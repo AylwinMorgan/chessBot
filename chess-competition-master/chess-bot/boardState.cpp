@@ -16,8 +16,9 @@ BoardState::BoardState(std::string fen) {
 	// IMPORTANT: the top row is row 8 in chess so start from the bottom of the array and work upwards
 	int currentRow = 7;
 	int currentColumn = 0;
+	boardArray.reserve(64);
 	for (int i = 0; i < fen.length(); i++) {
-		char c = fen[i];
+		char c = fen.at(i);
 		if (currentColumn > 7) {
 			currentColumn = 0;
 			currentRow--;
@@ -77,5 +78,5 @@ char BoardState::getPieceAtSquare(int row, int column) {
 		//std::cout << "out of bounds";
 		return '-';
 	}
-	return boardArray[(7 - row) * 8 + column];
+	return boardArray.at((7 - row) * 8 + column);
 }

@@ -1,8 +1,6 @@
 #include "piece.h"
 
-BoardState Piece::board = BoardState();
-
-bool Piece::squareIsValid(int row, int column) {
+bool Piece::squareIsValid(int row, int column, BoardState board) {
 	if (row < 0 || row > 7 || column < 0 || column > 7) {
 		return false;
 	}
@@ -27,12 +25,12 @@ bool Piece::squareIsValid(int row, int column) {
 	return false;
 }
 
-std::unordered_set<ChessMove> Pawn::getLegalMoves(int row, int column) {
+std::unordered_set<ChessMove> Pawn::getLegalMoves(int row, int column, BoardState board) {
 	std::unordered_set<ChessMove> legalMoves;
 	if (color == Color::white) {
 		// check next row
 		char nextRow = board.getPieceAtSquare(row + 1, column);
-		if (nextRow == '-') {
+		if (nextRow == '-' && row < 7) {
 			char promotion = 0;
 			if (row == 6) {
 				promotion = 'q';
@@ -47,18 +45,18 @@ std::unordered_set<ChessMove> Pawn::getLegalMoves(int row, int column) {
 		}
 		// check diagonals in next row for black pieces
 		char diagonalLeft = board.getPieceAtSquare(row+1, column - 1);
-		if ( squareIsValid(row+1, column-1) && diagonalLeft != '-') {
+		if ( squareIsValid(row+1, column-1, board) && diagonalLeft != '-') {
 			legalMoves.insert(board.getUCINotation(row,column,row+1,column-1));
 		}
 		char diagonalRight = board.getPieceAtSquare(row+1, column + 1);
-		if (squareIsValid(row+1,column+1) && diagonalRight != '-') {
+		if (squareIsValid(row+1,column+1, board) && diagonalRight != '-') {
 			legalMoves.insert(board.getUCINotation(row, column, row + 1, column + 1));
 		}
 	}
 	else {
 		// check next row
 		char nextRow = board.getPieceAtSquare(row - 1, column);
-		if (nextRow == '-') {
+		if (nextRow == '-' && row > 0) {
 			char promotion = '0';
 			if (row == 1) {
 				promotion = 'q';
@@ -74,24 +72,24 @@ std::unordered_set<ChessMove> Pawn::getLegalMoves(int row, int column) {
 		// check diagonals in next row for white pieces
 		char diagonalLeft = board.getPieceAtSquare(row - 1, column - 1);
 		char diagonalRight = board.getPieceAtSquare(row - 1, column + 1);
-		if (squareIsValid(row-1,column-1) && diagonalLeft != '-') {
+		if (squareIsValid(row-1,column-1, board) && diagonalLeft != '-') {
 			legalMoves.insert(board.getUCINotation(row, column, row - 1, column - 1));
 		}
-		if (squareIsValid(row-1,column+1) && diagonalRight != '-') {
+		if (squareIsValid(row-1,column+1, board) && diagonalRight != '-') {
 			legalMoves.insert(board.getUCINotation(row, column, row - 1, column + 1));
 		}
 	}
 	return legalMoves;
 }
 
-std::unordered_set<ChessMove> Rook::getLegalMoves(int row, int column) {
+std::unordered_set<ChessMove> Rook::getLegalMoves(int row, int column, BoardState board) {
 	// look at all squares to the left, stopping when a square with a piece is found or the edge of the board is reached
 	// include the square if the piece on it is a different color
 	// repeat for forward, right, and backward directions
 	std::unordered_set<ChessMove> legalMoves;
 	// get squares to left, breaking the loop when an invalid square is reached
 	for (int i = column - 1; i >= 0; i--) {
-		if (squareIsValid(row, i)) {
+		if (squareIsValid(row, i, board)) {
 			legalMoves.insert(board.getUCINotation(row,column,row,i));
 			if (board.getPieceAtSquare(row, i) != '-') {
 				break;
@@ -103,7 +101,7 @@ std::unordered_set<ChessMove> Rook::getLegalMoves(int row, int column) {
 	}
 	// get valid squares to right
 	for (int i = column + 1; i <= 7; i++) {
-		if (squareIsValid(row, i)) {
+		if (squareIsValid(row, i, board)) {
 			legalMoves.insert(board.getUCINotation(row,column,row,i));
 			if (board.getPieceAtSquare(row, i) != '-') {
 				break;
@@ -115,7 +113,7 @@ std::unordered_set<ChessMove> Rook::getLegalMoves(int row, int column) {
 	}
 	// get valid squares towards bottom
 	for (int i = row - 1; i >= 0; i--) {
-		if (squareIsValid(i, column)) {
+		if (squareIsValid(i, column, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, i, column));
 			if (board.getPieceAtSquare(i, column) != '-') {
 				break;
@@ -127,7 +125,7 @@ std::unordered_set<ChessMove> Rook::getLegalMoves(int row, int column) {
 	}
 	// get valid squares towards top
 	for (int i = row + 1; i <= 7; i++) {
-		if (squareIsValid(i, column)) {
+		if (squareIsValid(i, column, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, i, column));
 			if (board.getPieceAtSquare(i, column) != '-') {
 				break;
@@ -140,7 +138,7 @@ std::unordered_set<ChessMove> Rook::getLegalMoves(int row, int column) {
 	return legalMoves;
 }
 
-std::unordered_set<ChessMove> Bishop::getLegalMoves(int row, int column) {
+std::unordered_set<ChessMove> Bishop::getLegalMoves(int row, int column, BoardState board) {
 	// look at all squares in all 4 diagonals, stopping when an invalid square is reached
 	// get the number of squares by finding the minimum value between rows to edge and columns to edge
 	int squaresInTopLeftDirection = std::min(7-row,column);
@@ -150,7 +148,7 @@ std::unordered_set<ChessMove> Bishop::getLegalMoves(int row, int column) {
 	std::unordered_set<ChessMove> legalMoves;
 
 	for (int i = 0; i < squaresInTopLeftDirection; i++) {
-		if (squareIsValid(row+i, column-i)) {
+		if (squareIsValid(row+i, column-i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row+i, column-i));
 			if (board.getPieceAtSquare(row+i, column-i) != '-') {
 				break;
@@ -161,7 +159,7 @@ std::unordered_set<ChessMove> Bishop::getLegalMoves(int row, int column) {
 		}
 	}
 	for (int i = 0; i < squaresInTopRightDirection; i++) {
-		if (squareIsValid(row + i, column + i)) {
+		if (squareIsValid(row + i, column + i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row + i, column + i));
 			if (board.getPieceAtSquare(row + i, column + i) != '-') {
 				break;
@@ -172,7 +170,7 @@ std::unordered_set<ChessMove> Bishop::getLegalMoves(int row, int column) {
 		}
 	}
 	for (int i = 0; i < squaresInBottomLeftDirection; i++) {
-		if (squareIsValid(row - i, column - i)) {
+		if (squareIsValid(row - i, column - i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row - i, column - i));
 			if (board.getPieceAtSquare(row - i, column - i) != '-') {
 				break;
@@ -183,7 +181,7 @@ std::unordered_set<ChessMove> Bishop::getLegalMoves(int row, int column) {
 		}
 	}
 	for (int i = 0; i < squaresInBottomRightDirection; i++) {
-		if (squareIsValid(row - i, column + i)) {
+		if (squareIsValid(row - i, column + i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row - i, column + i));
 			if (board.getPieceAtSquare(row - i, column + i) != '-') {
 				break;
@@ -196,42 +194,42 @@ std::unordered_set<ChessMove> Bishop::getLegalMoves(int row, int column) {
 	return legalMoves;
 }
 
-std::unordered_set<ChessMove> Knight::getLegalMoves(int row, int column) {
+std::unordered_set<ChessMove> Knight::getLegalMoves(int row, int column, BoardState board) {
 	std::unordered_set<ChessMove> legalMoves;
 	// check all 8 possible knight moves to see if the square is valid
-	if (squareIsValid(row+2, column-1)) {
+	if (squareIsValid(row+2, column-1, board)) {
 		legalMoves.insert(board.getUCINotation(row, column, row+2, column-1));
 	}
-	if (squareIsValid(row+2, column+1)) {
+	if (squareIsValid(row+2, column+1, board)) {
 		legalMoves.insert(board.getUCINotation(row, column, row+2, column+1));
 	}
-	if (squareIsValid(row + 1, column + 2)) {
+	if (squareIsValid(row + 1, column + 2, board)) {
 		legalMoves.insert(board.getUCINotation(row, column, row + 1, column + 2));
 	}
-	if (squareIsValid(row - 1, column + 2)) {
+	if (squareIsValid(row - 1, column + 2, board)) {
 		legalMoves.insert(board.getUCINotation(row, column, row - 1, column + 2));
 	}
-	if (squareIsValid(row - 2, column + 1)) {
+	if (squareIsValid(row - 2, column + 1, board)) {
 		legalMoves.insert(board.getUCINotation(row, column, row - 2, column + 1));
 	}
-	if (squareIsValid(row - 2, column - 1)) {
+	if (squareIsValid(row - 2, column - 1, board)) {
 		legalMoves.insert(board.getUCINotation(row, column, row - 2, column - 1));
 	}
-	if (squareIsValid(row - 1, column - 2)) {
+	if (squareIsValid(row - 1, column - 2, board)) {
 		legalMoves.insert(board.getUCINotation(row, column, row - 1, column - 2));
 	}
-	if (squareIsValid(row + 1, column - 2)) {
+	if (squareIsValid(row + 1, column - 2, board)) {
 		legalMoves.insert(board.getUCINotation(row, column, row + 1, column - 2));
 	}
 	return legalMoves;
 }
 
-std::unordered_set<ChessMove> King::getLegalMoves(int row, int column) {
+std::unordered_set<ChessMove> King::getLegalMoves(int row, int column, BoardState board) {
 	std::unordered_set<ChessMove> legalMoves;
 	// check all 8 possible king moves to see if they are valid
 	for (int i = -1; i < 2; i++) {
 		for (int j = -1; j < 2; j++) {
-			if (squareIsValid(row + i, column + j)) {
+			if (squareIsValid(row + i, column + j, board)) {
 				legalMoves.insert(board.getUCINotation(row,column,row+i,column+j));
 			}
 		}
@@ -239,7 +237,7 @@ std::unordered_set<ChessMove> King::getLegalMoves(int row, int column) {
 	return legalMoves;
 }
 
-std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
+std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column, BoardState board) {
 	std::unordered_set<ChessMove> legalMoves;
 	int squaresInTopLeftDirection = std::min(7 - row, column);
 	int squaresInTopRightDirection = std::min(7 - row, 7 - column);
@@ -247,7 +245,7 @@ std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
 	int squaresInBottomRightDirection = std::min(row, 7 - column);
 	// get squares to left, breaking the loop when an invalid square is reached
 	for (int i = column - 1; i >= 0; i--) {
-		if (squareIsValid(row, i)) {
+		if (squareIsValid(row, i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row, i));
 			if (board.getPieceAtSquare(row, i) != '-') {
 				break;
@@ -259,7 +257,7 @@ std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
 	}
 	// get valid squares to right
 	for (int i = column + 1; i <= 7; i++) {
-		if (squareIsValid(row, i)) {
+		if (squareIsValid(row, i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row, i));
 			if (board.getPieceAtSquare(row, i) != '-') {
 				break;
@@ -271,7 +269,7 @@ std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
 	}
 	// get valid squares towards bottom
 	for (int i = row - 1; i >= 0; i--) {
-		if (squareIsValid(i, column)) {
+		if (squareIsValid(i, column, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, i, column));
 			if (board.getPieceAtSquare(i, column) != '-') {
 				break;
@@ -283,7 +281,7 @@ std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
 	}
 	// get valid squares towards top
 	for (int i = row + 1; i <= 7; i++) {
-		if (squareIsValid(i, column)) {
+		if (squareIsValid(i, column, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, i, column));
 			if (board.getPieceAtSquare(i, column) != '-') {
 				break;
@@ -296,7 +294,7 @@ std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
 
 	// diagonals
 	for (int i = 0; i < squaresInTopLeftDirection; i++) {
-		if (squareIsValid(row + i, column - i)) {
+		if (squareIsValid(row + i, column - i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row + i, column - i));
 			if (board.getPieceAtSquare(row + i, column - i) != '-') {
 				break;
@@ -307,7 +305,7 @@ std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
 		}
 	}
 	for (int i = 0; i < squaresInTopRightDirection; i++) {
-		if (squareIsValid(row + i, column + i)) {
+		if (squareIsValid(row + i, column + i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row + i, column + i));
 			if (board.getPieceAtSquare(row + i, column + i) != '-') {
 				break;
@@ -318,7 +316,7 @@ std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
 		}
 	}
 	for (int i = 0; i < squaresInBottomLeftDirection; i++) {
-		if (squareIsValid(row - i, column - i)) {
+		if (squareIsValid(row - i, column - i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row - i, column - i));
 			if (board.getPieceAtSquare(row - i, column - i) != '-') {
 				break;
@@ -329,7 +327,7 @@ std::unordered_set<ChessMove> Queen::getLegalMoves(int row, int column) {
 		}
 	}
 	for (int i = 0; i < squaresInBottomRightDirection; i++) {
-		if (squareIsValid(row - i, column + i)) {
+		if (squareIsValid(row - i, column + i, board)) {
 			legalMoves.insert(board.getUCINotation(row, column, row - i, column + i));
 			if (board.getPieceAtSquare(row - i, column + i) != '-') {
 				break;
