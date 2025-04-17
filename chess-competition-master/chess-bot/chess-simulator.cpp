@@ -5,6 +5,7 @@
 #include <random>
 #include <iostream>
 #include <cmath>
+#include <limits>
 using namespace ChessSimulator;
 
 BoardState ChessSimulator::getNewBoardStateFromMove(BoardState board, ChessMove move) {
@@ -188,6 +189,11 @@ std::string ChessSimulator::Move(std::string fen) {
 	bool whiteToMove = fen.find('w') != std::string::npos;
 	std::unordered_set<ChessMove> allMoves = getAllLegalMoves(board,whiteToMove,true);
 
+	ChessMove move = getBestMove(allMoves, board, whiteToMove);
+
+	std::string finalMove = move.from + move.to + move.promotion;
+	return finalMove;
+	/*
 	auto iterator = allMoves.begin();
 	if (allMoves.size() > 0){
     	std::advance(iterator, rand() % allMoves.size());
@@ -197,13 +203,14 @@ std::string ChessSimulator::Move(std::string fen) {
     	std::string finalMove = move.from + move.to + move.promotion;
 	    return finalMove;
 	}
-	return "";
+	*/
+	//return "";
 }
 
 
 
 // uses minimax algorithm to get most favorable move based on heuristic
-ChessMove ChessSimulator::getBestMove(std::unordered_set<ChessMove> moves, bool whiteToMove) {
+ChessMove ChessSimulator::getBestMove(std::unordered_set<ChessMove> moves, BoardState board, bool whiteToMove) {
 	// look at all moves
 	// for each move:
 	// get all subsequent moves 
@@ -211,8 +218,9 @@ ChessMove ChessSimulator::getBestMove(std::unordered_set<ChessMove> moves, bool 
 	// fill node children set with a node for all moves in moves
 	// for each child, fill its child set with a node for each new possible set of moves
 	ChessSimulator::minmaxNode* root = new minmaxNode;
+	root->board = board;
 	int depth = 3;
-	int bestValue = ChessSimulator::minmax(root, depth, true, whiteToMove);
+	int bestValue = ChessSimulator::minmax(root, depth, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), true, whiteToMove);
 	ChessMove bestMove;
 
 	for (minmaxNode* child : root->children) {
@@ -243,13 +251,11 @@ function minimax(node, depth, maximizingPlayer) is
 
 // get value of chess move and apply it to node
 // to do: add alpha-beta pruning to make this more efficient
-int ChessSimulator::minmax(minmaxNode* node, int depth, bool maximize, bool whiteToMove) {
-	
-	
+int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, bool maximize, bool whiteToMove) {
 	// if deepest depth reached, return h-value of node based on board state
 	if (depth == 0) {
-		node->heuristic = ChessSimulator::getValueOfMove(node->board);
-		return node;
+		node->heuristic = ChessSimulator::getValueOfBoard(node->board, whiteToMove);
+		return node->heuristic;
 	}
 
 	// otherwise get all moves
@@ -258,28 +264,36 @@ int ChessSimulator::minmax(minmaxNode* node, int depth, bool maximize, bool whit
 	// if there are no moves, get current board value 
 	// (this means checkmate or draw, examine this state carefully)
 	if (moves.empty()) {
-		node->heuristic = ChessSimulator::getValueOfMove(node->board);
-		return node;
+		node->heuristic = ChessSimulator::getValueOfBoard(node->board, whiteToMove);
+		return node->heuristic;
 	}
 
 	// otherwise, look at all possible moves and pick the one with the highest or lowest minmax value
 	// for each possible move, create a child node and run minmax again from there (with 1 less depth and maximize switched)
-	int value = maximize ? -INFINITY : INFINITY;
+	int value = maximize ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max();
 
 	for (ChessMove move : moves) {
 		BoardState nextState = ChessSimulator::getNewBoardStateFromMove(node->board, move);
+		
 		ChessSimulator::minmaxNode* child = new ChessSimulator::minmaxNode;
 		child->board = nextState;
 		child->move = move;
 
-		int childScore = ChessSimulator::minmax(child, depth - 1, !maximize, !whiteToMove);
+		int childScore = ChessSimulator::minmax(child, depth - 1, alpha, beta, !maximize, !whiteToMove);
 		node->children.insert(child);
 
 		if (maximize) {
 			value = std::max(value, childScore);
+			alpha = std::max(alpha, value);
 		}
 		else {
 			value = std::min(value, childScore);
+			beta = std::min(beta, value);
+		}
+
+		// alpha beta pruning
+		if (beta <= alpha) {
+			break;
 		}
 	}
 
@@ -287,108 +301,59 @@ int ChessSimulator::minmax(minmaxNode* node, int depth, bool maximize, bool whit
 	return value;
 }
 
+// calculate value of board state based on which pieces both sides have
+
+int ChessSimulator::getColorScore(BoardState board, bool checkWhite) {
+	int total = 0;
+	int boardPosition = 0;
+	for (char c : board.boardArray) {
+		int scoreFactor = 1;
+		if (isupper(c) != checkWhite){
+			scoreFactor = -1;
+		}
+		char lower = tolower(c);
+		int value = 0;
+		switch (lower)
+		{
+			case 'p':
+				value = 1;
+				break;
+			case 'n':
+			case 'b':
+				value = 3;
+				break;
+			case 'r':
+				value = 5;
+				break;
+			case 'q':
+				value = 9;
+				break;
+			case 'k':
+				value = 1000;
+				break;
+		}
+		total += value * scoreFactor;
+		if (lower != 'q' && lower != 'k') {
+			int row = boardPosition / 8;
+			int column = boardPosition % 8;
+			//total -= (abs(2*row - 7) + abs(2*column - 7)/2);
+		}
+		boardPosition++;
+	}
+	return total;
+}
+
 // to do: make this analyze the resulting board state
-int ChessSimulator::getValueOfMove(BoardState board) {
-	return 0;
+int ChessSimulator::getValueOfBoard(BoardState board, bool whiteToMove) {
+	return ChessSimulator::getColorScore(board, whiteToMove);
 }
 
 // delete all child nodes when node is deleted
 ChessSimulator::minmaxNode::~minmaxNode() {
 	for (minmaxNode* child : children) {
-		children.erase(child);
 		delete child;
 	}
 }
-
-// fen string manipulation (unneeded)
-/*
-std::string getFenFromMove(Move move, std::string fen) {
-	/// SUMMARY OF OPERATIONS ///
-	// update piece placements based on move
-	// swap active color
-	// ignore castling availability for now, assume neither side can castle
-	// ignore en passant for now, assume no en passant is possible
-	// add to half move clock or reset it if a capture or pawn advance occurred
-	// update fullmove clock if black moved
-	std::string newFen = fen;
-
-	int fromColumn = (int)move.from.at(0) - (int)'a';
-	int fromRow = (int)move.from.at(1) - (int)'1';
-
-	int toColumn = (int)move.to.at(0) - (int)'a';
-	int toRow = (int)move.to.at(1) - (int)'1';
-
-
-	int currentRow, currentColumn;
-	currentRow = 7;
-	currentColumn = 0;
-	char movingPiece;
-	int index = 0;
-
-	// sets the previously occupied position to empty
-	for (char c : fen) {
-		if (isalpha(c)) {
-			if (currentColumn == fromColumn && currentRow == fromRow) {
-				movingPiece = c;
-				// if the value to the left or right of c are a number
-				// erase c from the string and add to the adjacent value
-				// if both left and right are numbers
-				
-				char leftValue = fen.at(index-1);
-				char rightValue = fen.at(index+1);
-				bool leftIsNumber = isdigit(leftValue);
-				bool rightIsNumber = isdigit(rightValue);
-
-				fen.at(index) = '1';
-				// if number to left, erase value at index and add it to left
-				if (leftIsNumber) {
-
-					fen.erase(index,1);
-					index--;
-					fen.at(index) = leftValue + ()
-				}
-				// if number to right, erase value at index and add it to right
-				if (rightIsNumber) {
-
-				}
-			}
-			currentColumn++;
-		}
-		else if (isdigit(c)) {
-			currentColumn += int(c - '0');
-		}
-
-		if (currentColumn > 7) {
-			currentColumn = 0;
-			currentRow++;
-		}
-		index++;
-	}
-
-	currentColumn = 0;
-	currentRow = 7;
-	for (char c : fen) {
-		if (isalpha(c)) {
-			if (currentColumn == toColumn && currentRow == toRow) {
-				movingPiece = c;
-				fen.at(index) = movingPiece;
-			}
-			currentColumn++;
-		}
-		else if (isdigit(c)) {
-			currentColumn += int(c - '0');
-		}
-
-		if (currentColumn > 7) {
-			currentColumn = 0;
-			currentRow++;
-		}
-		index++;
-	}
-
-}
-*/
-
 
   // create your board based on the board string following the FEN notation
   // search for the best move using minimax / monte carlo tree search /

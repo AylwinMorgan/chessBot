@@ -29,18 +29,19 @@ namespace ChessSimulator {
  };
 
 
-int getValueOfMove(ChessMove move, BoardState board);
+int getValueOfBoard(BoardState board, bool whiteToMove);
+int getColorScore(BoardState board, bool checkWhite);
 bool kingIsInCheck(BoardState board, ChessMove move, Color color);
 std::unordered_set<ChessMove> getLegalMoves(BoardState board, int row, int column, bool whiteToMove, bool considerCheck);
 std::string Move(std::string fen);
 std::unordered_set<ChessMove> getAllLegalMoves(BoardState board, bool whiteToMove, bool considerCheck);
 
 // needs implmentation
-ChessMove getBestMove(std::unordered_set<ChessMove> moves, bool whiteToMove);
+ChessMove getBestMove(std::unordered_set<ChessMove> moves, BoardState board, bool whiteToMove);
 
 // needs implementation
 std::unordered_set<minmaxNode*> generateMinmaxChildren(BoardState board);
-int minmax(minmaxNode* node, int depth, bool maximize);
+int minmax(minmaxNode* node, int depth, int alpha, int beta, bool maximize, bool whiteToMove);
 
 
 BoardState getNewBoardStateFromMove(BoardState board, ChessMove move);
