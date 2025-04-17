@@ -254,7 +254,7 @@ function minimax(node, depth, maximizingPlayer) is
 int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, bool maximize, bool whiteToMove) {
 	// if deepest depth reached, return h-value of node based on board state
 	if (depth == 0) {
-		node->heuristic = ChessSimulator::getValueOfBoard(node->board, whiteToMove);
+		node->heuristic = ChessSimulator::getValueOfBoard(node->board, !whiteToMove);
 		return node->heuristic;
 	}
 
@@ -264,7 +264,7 @@ int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, boo
 	// if there are no moves, get current board value 
 	// (this means checkmate or draw, examine this state carefully)
 	if (moves.empty()) {
-		node->heuristic = ChessSimulator::getValueOfBoard(node->board, whiteToMove);
+		node->heuristic = ChessSimulator::getValueOfBoard(node->board, !whiteToMove);
 		return node->heuristic;
 	}
 
