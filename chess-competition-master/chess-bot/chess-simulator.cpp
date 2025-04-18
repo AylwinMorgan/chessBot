@@ -8,6 +8,153 @@
 #include <limits>
 using namespace ChessSimulator;
 
+
+// use to look up distance from center of board
+const int arrCenterDistance[64] = {
+  3, 3, 3, 3, 3, 3, 3, 3,
+  3, 2, 2, 2, 2, 2, 2, 3,
+  3, 2, 1, 1, 1, 1, 2, 3,
+  3, 2, 1, 0, 0, 1, 2, 3,
+  3, 2, 1, 0, 0, 1, 2, 3,
+  3, 2, 1, 1, 1, 1, 2, 3,
+  3, 2, 2, 2, 2, 2, 2, 3,
+  3, 3, 3, 3, 3, 3, 3, 3
+};
+
+// use following tables to get piece value at board location
+// credit: chessprogramming.org for the numerical values
+const int whitePawnValue[64] = {
+  0,  0,  0,  0,  0,  0,  0,  0,
+  50, 50, 50, 50, 50, 50, 50, 50,
+  10, 10, 20, 30, 30, 20, 10, 10,
+  5,  5, 10, 25, 25, 10,  5,  5,
+  0,  0,  0, 20, 20,  0,  0,  0,
+  5, -5,-10,  0,  0,-10, -5,  5,
+  5, 10, 10,-20,-20, 10, 10,  5,
+  0,  0,  0,  0,  0,  0,  0,  0
+};
+
+const int blackPawnValue[64] = {
+  0,  0,  0,  0,  0,  0,  0,  0,
+  5, 10, 10,-20,-20, 10, 10,  5,
+  5, -5,-10,  0,  0,-10, -5,  5,
+  0,  0,  0, 20, 20,  0,  0,  0,
+  5,  5, 10, 25, 25, 10,  5,  5,
+  10, 10, 20, 30, 30, 20, 10, 10,
+  50, 50, 50, 50, 50, 50, 50, 50,
+  0,  0,  0,  0,  0,  0,  0,  0
+};
+
+const int whiteKnightValue[64] = {
+  -50,-40,-30,-30,-30,-30,-40,-50,
+  -40,-20,  0,  0,  0,  0,-20,-40,
+  -30,  0, 10, 15, 15, 10,  0,-30,
+  -30,  5, 15, 20, 20, 15,  5,-30,
+  -30,  0, 15, 20, 20, 15,  0,-30,
+  -30,  5, 10, 15, 15, 10,  5,-30,
+  -40,-20,  0,  5,  5,  0,-20,-40,
+  -50,-40,-30,-30,-30,-30,-40,-50,
+};
+
+const int blackKnightValue[64] = {
+  -50,-40,-30,-30,-30,-30,-40,-50,
+  -40,-20,  0,  5,  5,  0,-20,-40,
+  -30,  5, 10, 15, 15, 10,  5,-30,
+  -30,  0, 15, 20, 20, 15,  0,-30,
+  -30,  5, 15, 20, 20, 15,  5,-30,
+  -30,  0, 10, 15, 15, 10,  0,-30,
+  -40,-20,  0,  0,  0,  0,-20,-40,
+  -50,-40,-30,-30,-30,-30,-40,-50,
+};
+
+const int whiteBishopValue[64] = {
+  -20,-10,-10,-10,-10,-10,-10,-20,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -10,  0,  5, 10, 10,  5,  0,-10,
+  -10,  5,  5, 10, 10,  5,  5,-10,
+  -10,  0, 10, 10, 10, 10,  0,-10,
+  -10, 10, 10, 10, 10, 10, 10,-10,
+  -10,  5,  0,  0,  0,  0,  5,-10,
+  -20,-10,-10,-10,-10,-10,-10,-20
+};
+
+const int blackBishopValue[64] = {
+  -20,-10,-10,-10,-10,-10,-10,-20,
+  -10,  5,  0,  0,  0,  0,  5,-10,
+  -10, 10, 10, 10, 10, 10, 10,-10,
+  -10,  0, 10, 10, 10, 10,  0,-10,
+  -10,  5,  5, 10, 10,  5,  5,-10,
+  -10,  0,  5, 10, 10,  5,  0,-10,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -20,-10,-10,-10,-10,-10,-10,-20
+};
+
+const int whiteRookValue[64] = {
+  0,  0,  0,  0,  0,  0,  0,  0,
+  5, 10, 10, 10, 10, 10, 10,  5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+  0,  0,  0,  5,  5,  0,  0,  0
+};
+
+const int blackRookValue[64] = {
+  0,  0,  0,  5,  5,  0,  0,  0,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+ -5,  0,  0,  0,  0,  0,  0, -5,
+  5, 10, 10, 10, 10, 10, 10,  5,
+  0,  0,  0,  0,  0,  0,  0,  0
+};
+
+const int whiteQueenValue[64] = {
+  -20,-10,-10, -5, -5,-10,-10,-20,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -10,  0,  5,  5,  5,  5,  0,-10,
+  -5,  0,  5,  5,  5,  5,  0, -5,
+   0,  0,  5,  5,  5,  5,  0, -5,
+  -10,  5,  5,  5,  5,  5,  0,-10,
+  -10,  0,  5,  0,  0,  0,  0,-10,
+  -20,-10,-10, -5, -5,-10,-10,-20
+};
+
+const int blackQueenValue[64] = {
+  -20,-10,-10, -5, -5,-10,-10,-20,
+  -10,  0,  5,  0,  0,  0,  0,-10,
+  -10,  5,  5,  5,  5,  5,  0,-10,
+   0,  0,  5,  5,  5,  5,  0, -5,
+  -5,  0,  5,  5,  5,  5,  0, -5,
+  -10,  0,  5,  5,  5,  5,  0,-10,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -20,-10,-10, -5, -5,-10,-10,-20
+};
+
+const int whiteKingValue[64] = {
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -20,-30,-30,-40,-40,-30,-30,-20,
+  -10,-20,-20,-20,-20,-20,-20,-10,
+   20, 20,  0,  0,  0,  0, 20, 20,
+   20, 30, 10,  0,  0, 10, 30, 20
+};
+
+const int blackKingValue[64] = {
+   20, 30, 10,  0,  0, 10, 30, 20,
+   20, 20,  0,  0,  0,  0, 20, 20,
+  -10,-20,-20,-20,-20,-20,-20,-10,
+  -20,-30,-30,-40,-40,-30,-30,-20,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30
+};
+
 BoardState ChessSimulator::getNewBoardStateFromMove(BoardState board, ChessMove move) {
 	BoardState newBoard = BoardState();
 
@@ -23,8 +170,18 @@ BoardState ChessSimulator::getNewBoardStateFromMove(BoardState board, ChessMove 
 	int toColumn = (int)move.to.at(0) - (int)'a';
 	int toRow = (int)move.to.at(1) - (int)'1';
 
+	char piece = newBoard.boardArray.at((7 - fromRow) * 8 + fromColumn);
+
+	if (!move.promotion.empty()) {
+		if (isupper(piece)){
+			piece = toupper(move.promotion.at(0));
+		}
+		else {
+			piece = move.promotion.at(0);
+		}
+	}
 	// set ChessMove.to in the new board to be the piece at ChessMove.from
-	newBoard.boardArray.at((7 - toRow) * 8 + toColumn) = newBoard.boardArray.at((7 - fromRow) * 8 + fromColumn);
+	newBoard.boardArray.at((7 - toRow) * 8 + toColumn) = piece;
 	// set ChessMove.from in the new board to empty
 	newBoard.boardArray.at((7 - fromRow) * 8 + fromColumn) = '-';
 	return newBoard;
@@ -207,8 +364,6 @@ std::string ChessSimulator::Move(std::string fen) {
 	//return "";
 }
 
-
-
 // uses minimax algorithm to get most favorable move based on heuristic
 ChessMove ChessSimulator::getBestMove(std::unordered_set<ChessMove> moves, BoardState board, bool whiteToMove) {
 	// look at all moves
@@ -226,6 +381,7 @@ ChessMove ChessSimulator::getBestMove(std::unordered_set<ChessMove> moves, Board
 	for (minmaxNode* child : root->children) {
 		if (child->heuristic == root->heuristic) {
 			bestMove = child->move;
+			break;
 		}
 	}
 
@@ -302,42 +458,88 @@ int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, boo
 }
 
 // calculate value of board state based on which pieces both sides have
-
+// also calculate value of piece value based on its location
 int ChessSimulator::getColorScore(BoardState board, bool checkWhite) {
 	int total = 0;
 	int boardPosition = 0;
+
+	int compositionValueFactor = 10;
+	int positionValueFactor = 1;
+
 	for (char c : board.boardArray) {
+		int row = boardPosition / 8;
+		int column = boardPosition % 8;
 		int scoreFactor = 1;
+		bool pieceIsWhite = isupper(c);
 		if (isupper(c) != checkWhite){
 			scoreFactor = -1;
 		}
 		char lower = tolower(c);
-		int value = 0;
+		int compositionValue = 0;
+		int positionValue = 0;
 		switch (lower)
 		{
 			case 'p':
-				value = 1;
+				// pawns are worth 1 point overall and give value based on how far they have advanced
+				compositionValue = 1 * compositionValueFactor;
+				if (pieceIsWhite) {
+					positionValue = whitePawnValue[boardPosition];
+				}
+				else {
+					positionValue = blackPawnValue[boardPosition];
+				}
 				break;
 			case 'n':
+				compositionValue = 3;
+				if (pieceIsWhite) {
+					positionValue = whiteKnightValue[boardPosition];
+				}
+				else {
+					positionValue = blackKnightValue[boardPosition];
+				}
+				break;
 			case 'b':
-				value = 3;
+				// knight and bishop are worth more when closer to the center 4 squares of the board
+				compositionValue = 3;
+				if (pieceIsWhite) {
+					positionValue = whiteBishopValue[boardPosition];
+				}
+				else {
+					positionValue = blackBishopValue[boardPosition];
+				}
 				break;
 			case 'r':
-				value = 5;
+				compositionValue = 5;
+				if (pieceIsWhite) {
+					positionValue = whiteRookValue[boardPosition];
+				}
+				else {
+					positionValue = blackRookValue[boardPosition];
+				}
 				break;
 			case 'q':
-				value = 9;
+				compositionValue = 9;
+				if (pieceIsWhite) {
+					positionValue = whiteQueenValue[boardPosition];
+				}
+				else {
+					positionValue = blackQueenValue[boardPosition];
+				}
 				break;
 			case 'k':
-				value = 1000;
+				compositionValue = 1000;
+				if (pieceIsWhite) {
+					positionValue = whiteKingValue[boardPosition];
+				}
+				else {
+					positionValue = blackKingValue[boardPosition];
+				}
 				break;
 		}
-		total += value * scoreFactor;
-		if (lower != 'q' && lower != 'k') {
-			int row = boardPosition / 8;
-			int column = boardPosition % 8;
-			//total -= (abs(2*row - 7) + abs(2*column - 7)/2);
-		}
+		compositionValue *= compositionValueFactor;
+		positionValue *= positionValueFactor;
+
+		total += (compositionValue + positionValue) * scoreFactor;
 		boardPosition++;
 	}
 	return total;
