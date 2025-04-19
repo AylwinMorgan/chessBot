@@ -28,6 +28,7 @@ struct ChessMove {
 	std::string to;
 
 	std::string promotion = "";
+	bool castle = false;
 
 	bool operator==(const ChessMove& other) const {
 		return (from == other.from && to == other.to && promotion == other.promotion);
@@ -60,7 +61,8 @@ class BoardState {
 	std::string board;
 	std::vector<char> boardArray;
 	std::string getColumnLetter(int column);
-	ChessMove getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = 0);
+
+	ChessMove getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = 0, bool castle = false);
 	char getPieceAtSquare(int row, int column);
 
 	int halfTurnCount = 0;
@@ -68,10 +70,12 @@ class BoardState {
 
 	std::string enPassantColumn = "-";
 
-	struct castleEligibility {
+	struct castle {
 		bool whiteQueenside = false;
 		bool whiteKingside = false;
 		bool blackQueenside = false;
 		bool blackKingside = false;
 	};
+
+	castle castleEligibility;
 };

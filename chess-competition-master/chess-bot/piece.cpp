@@ -29,6 +29,12 @@ std::unordered_set<ChessMove> Pawn::getLegalMoves(int row, int column, BoardStat
 	std::unordered_set<ChessMove> legalMoves;
 	if (color == Color::white) {
 		// check next row
+		if (isdigit(board.enPassantColumn.at(0))) {
+			int enPassantColumn = board.enPassantColumn.at(0) - '1';
+			if (row == 4 && abs(enPassantColumn - column) == 1) {
+				legalMoves.insert(board.getUCINotation(row,column,row+1,enPassantColumn,0));
+			}
+		}
 		char nextRow = board.getPieceAtSquare(row + 1, column);
 		if (nextRow == '-' && row < 7) {
 			char promotion = 0;
@@ -55,6 +61,12 @@ std::unordered_set<ChessMove> Pawn::getLegalMoves(int row, int column, BoardStat
 	}
 	else {
 		// check next row
+		if (isdigit(board.enPassantColumn.at(0))) {
+			int enPassantColumn = board.enPassantColumn.at(0) - '1';
+			if (row == 3 && abs(enPassantColumn - column) == 1) {
+				legalMoves.insert(board.getUCINotation(row, column, row - 1, enPassantColumn, 0));
+			}
+		}
 		char nextRow = board.getPieceAtSquare(row - 1, column);
 		if (nextRow == '-' && row > 0) {
 			char promotion = '0';
@@ -232,6 +244,23 @@ std::unordered_set<ChessMove> King::getLegalMoves(int row, int column, BoardStat
 			if (squareIsValid(row + i, column + j, board)) {
 				legalMoves.insert(board.getUCINotation(row,column,row+i,column+j));
 			}
+		}
+	}
+
+	if (color == Color::white){
+		if (board.castleEligibility.whiteKingside){
+			legalMoves.insert(board.getUCINotation(row,column,0,6,0,true));
+		}
+		if (board.castleEligibility.whiteQueenside) {
+			legalMoves.insert(board.getUCINotation(row,column,0,2,0,true));
+		}
+	}
+	else {
+		if (board.castleEligibility.blackKingside) {
+			legalMoves.insert(board.getUCINotation(row, column, 7, 6, 0, true));
+		}
+		if (board.castleEligibility.blackQueenside) {
+			legalMoves.insert(board.getUCINotation(row, column, 7, 2, 0, true));
 		}
 	}
 	return legalMoves;

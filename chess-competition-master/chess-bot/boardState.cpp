@@ -62,13 +62,14 @@ std::string BoardState::getColumnLetter(int column) {
 	}
 }
 
-ChessMove BoardState::getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion) {
+ChessMove BoardState::getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion, bool castle) {
 	ChessMove notation;
 	notation.from = getColumnLetter(startColumn) + std::to_string(startRow+1);
 	notation.to = getColumnLetter(endColumn) + std::to_string(endRow+1);
 	if (promotion != 0){
 		notation.promotion = promotion;
 	}
+	notation.castle = castle;
 	return notation;
 }
 
@@ -79,4 +80,4 @@ char BoardState::getPieceAtSquare(int row, int column) {
 		return '-';
 	}
 	return boardArray.at((7 - row) * 8 + column);
-}
+	}

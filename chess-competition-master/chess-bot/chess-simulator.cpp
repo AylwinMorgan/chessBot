@@ -171,6 +171,7 @@ BoardState ChessSimulator::getNewBoardStateFromMove(BoardState board, ChessMove 
 	int toRow = (int)move.to.at(1) - (int)'1';
 
 	char piece = newBoard.boardArray.at((7 - fromRow) * 8 + fromColumn);
+	char targetSquareContents = newBoard.boardArray.at((7 - toRow) * 8 + toColumn);
 
 	if (!move.promotion.empty()) {
 		if (isupper(piece)){
@@ -183,10 +184,24 @@ BoardState ChessSimulator::getNewBoardStateFromMove(BoardState board, ChessMove 
 	// set ChessMove.to in the new board to be the piece at ChessMove.from
 	newBoard.boardArray.at((7 - toRow) * 8 + toColumn) = piece;
 	// set ChessMove.from in the new board to empty
+	// if the move was a castle, move the rook as well
+	if (move.castle) {
+		char rook = 'r';
+		if (isupper(piece)) {
+			rook = 'R';
+		}
+		if (toColumn == 7) {
+			newBoard.boardArray.at((7 - toRow) * 8 + toColumn - 1) = rook;
+		}
+		else {
+			newBoard.boardArray.at((7 - toRow) * 8 + toColumn + 1) = rook;
+		}
+	}
 	newBoard.boardArray.at((7 - fromRow) * 8 + fromColumn) = '-';
 	return newBoard;
 }
 
+// uses board state and move to calculate new board state
 bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color) {
 	// get a potential board state based on the move and see if the king of 'color' is in check
 	// do this by looking at all enemy pieces and checking if any of their legal moves end at the 'color' king's position
@@ -220,6 +235,42 @@ bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color
 		for (int j = 0; j < 8; j++) {
 			// get all moves that the enemy piece can do on the new board
 			std::unordered_set<ChessMove> enemyMoves = getLegalMoves(newBoard, i, j, wtm, false);
+			// if any of the moves end on the king's square, return true
+			for (ChessMove move : enemyMoves) {
+				if (move.to == kingColumnString + kingRowString) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+// takes in already calculated new board state
+bool ChessSimulator::kingIsInCheck(BoardState board, bool checkWhite) {
+	int kingRow;
+	int kingColumn;
+	std::string kingColumnString;
+	std::string kingRowString;
+
+	// find the king
+	for (kingRow = 0; kingRow < 8; kingRow++) {
+		for (kingColumn = 0; kingColumn < 8; kingColumn++) {
+			char square = board.boardArray.at((7 - kingRow) * 8 + kingColumn);
+			if ((((checkWhite && isupper(square)) || !checkWhite && islower(square))) && tolower(square) == 'k') {
+				kingColumnString = board.getColumnLetter(kingColumn);
+				kingRowString = std::to_string(kingRow + 1);
+				//std::cout << "king found at: " << kingColumnString << kingRowString << std::endl;
+				goto end_loop;
+			}
+		}
+	}
+end_loop:
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			// get all moves that the enemy piece can do on the new board
+			std::unordered_set<ChessMove> enemyMoves = getLegalMoves(board, i, j, !checkWhite, false);
 			// if any of the moves end on the king's square, return true
 			for (ChessMove move : enemyMoves) {
 				if (move.to == kingColumnString + kingRowString) {
@@ -305,7 +356,6 @@ std::unordered_set<ChessMove> ChessSimulator::getLegalMoves(BoardState board, in
 			for (ChessMove move : moves) {
 				if (kingIsInCheck(board, move, color)) {
 					toDelete.insert(move);
-					//moves.erase(move);
 				}
 			}
 			for (ChessMove move : toDelete) {
@@ -326,7 +376,6 @@ std::unordered_set<ChessMove> ChessSimulator::getAllLegalMoves(BoardState board,
 	std::unordered_set<ChessMove> allMoves;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
-
 			std::unordered_set<ChessMove> newMoves = getLegalMoves(board, i, j, whiteToMove, true);
 			allMoves.insert(newMoves.begin(), newMoves.end());
 		}
@@ -408,19 +457,39 @@ function minimax(node, depth, maximizingPlayer) is
 // get value of chess move and apply it to node
 // to do: add alpha-beta pruning to make this more efficient
 int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, bool maximize, bool whiteToMove) {
-	// if deepest depth reached, return h-value of node based on board state
 	if (depth == 0) {
 		node->heuristic = ChessSimulator::getValueOfBoard(node->board, !whiteToMove);
 		return node->heuristic;
 	}
 
-	// otherwise get all moves
+	
+	// if deepest depth reached, return h-value of node based on board state
 	std::unordered_set<ChessMove> moves = getAllLegalMoves(node->board, whiteToMove, true);
 
 	// if there are no moves, get current board value 
 	// (this means checkmate or draw, examine this state carefully)
-	if (moves.empty()) {
+	if (moves.empty() || depth == 0) {
 		node->heuristic = ChessSimulator::getValueOfBoard(node->board, !whiteToMove);
+		// if there are no valid moves and moving color piece is in check
+		// return very low value
+		// if non moving color 
+		if (moves.empty() && kingIsInCheck(node->board, whiteToMove)) {
+			// if depth is even, then minmax is currently looking at the non starting color
+			bool originalColor = whiteToMove;
+			if (depth % 2 == 0) {
+				originalColor = !originalColor;
+			}
+			// if original color is in checkmate, avoid this outcome 
+			if (kingIsInCheck(node->board, originalColor)) {
+				node->heuristic = -10000000;
+				return -10000000;
+			}
+			// if the other color is in checkmate, prioritize this state above all else
+			else if (kingIsInCheck(node->board, !originalColor)) {
+				node->heuristic = 10000000;
+				return 10000000;
+			}
+		}
 		return node->heuristic;
 	}
 
@@ -463,7 +532,7 @@ int ChessSimulator::getColorScore(BoardState board, bool checkWhite) {
 	int total = 0;
 	int boardPosition = 0;
 
-	int compositionValueFactor = 10;
+	int compositionValueFactor = 15;
 	int positionValueFactor = 1;
 
 	for (char c : board.boardArray) {
@@ -547,6 +616,10 @@ int ChessSimulator::getColorScore(BoardState board, bool checkWhite) {
 
 // to do: make this analyze the resulting board state
 int ChessSimulator::getValueOfBoard(BoardState board, bool whiteToMove) {
+	int value = 0;
+	if (kingIsInCheck(board, !whiteToMove)) {
+		value += 100;
+	}
 	return ChessSimulator::getColorScore(board, whiteToMove);
 }
 
