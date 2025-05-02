@@ -59,8 +59,8 @@ namespace ChessSimulator {
  };
 
 
-int getValueOfBoard(BoardState& board, bool whiteToMove);
-int getColorScore(BoardState& board, bool checkWhite);
+int getValueOfBoard(BoardState& board, bool whiteToMove, bool originallyWhite);
+int getColorScore(BoardState& board, bool checkWhite, bool originallyWhite);
 bool squareIsThreatened(BoardState& board, int row, int column, bool checkWhite);
 bool kingIsInCheck(BoardState& board, ChessMove move, Color color); 
 bool kingIsInCheck(BoardState& board, bool checkWhite);
