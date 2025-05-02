@@ -10,30 +10,30 @@ enum class Color: std::uint8_t {
 
 struct Piece {
 	Color color;
-	virtual std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board) = 0;
-	bool squareIsValid(int row, int column, BoardState board);
+	virtual std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board, bool threatenOwnColor = false) = 0;
+	bool squareIsValid(int row, int column, BoardState& board, bool considerColor);
 };
 
 struct Pawn : Piece {
-	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board);
+	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board, bool threatenOwnColor = false);
 };
 
 struct Rook : Piece {
-	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board);
+	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board, bool threatenOwnColor = false);
 };
 
 struct Knight : Piece {
-	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board);
+	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board, bool threatenOwnColor = false);
 };
 
 struct Bishop : Piece {
-	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board);
+	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board, bool threatenOwnColor = false);
 };
 
 struct Queen : Piece {
-	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board);
+	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board, bool threatenOwnColor = false);
 };
 
 struct King : Piece {
-	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board);
+	std::unordered_set<ChessMove> getLegalMoves(int row, int column, BoardState board, bool threatenOwnColor = false);
 };

@@ -52,6 +52,10 @@ namespace std
 }
 
 
+struct Threats {
+	bool white = false;
+	bool black = false;
+};
 
 class BoardState {
 	public:
@@ -60,6 +64,9 @@ class BoardState {
 	BoardState(std::string fen);
 	std::string board;
 	std::vector<char> boardArray;
+
+	std::vector<Threats> boardThreats;
+
 	std::string getColumnLetter(int column);
 
 	ChessMove getUCINotation(int startRow, int startColumn, int endRow, int endColumn, char promotion = 0, bool castle = false);
@@ -76,6 +83,9 @@ class BoardState {
 		bool blackQueenside = false;
 		bool blackKingside = false;
 	};
+
+
+
 
 	castle castleEligibility;
 };

@@ -13,12 +13,6 @@ namespace ChessSimulator {
  * @return std::string The move as UCI
  */
 
- // 
-
-
-
-
-// 
  struct minmaxNode {
 	~minmaxNode();
 
@@ -31,9 +25,10 @@ namespace ChessSimulator {
 
 int getValueOfBoard(BoardState board, bool whiteToMove);
 int getColorScore(BoardState board, bool checkWhite);
+bool squareIsThreatened(BoardState board, int row, int column, bool checkWhite);
 bool kingIsInCheck(BoardState board, ChessMove move, Color color); 
 bool kingIsInCheck(BoardState board, bool checkWhite);
-std::unordered_set<ChessMove> getLegalMoves(BoardState board, int row, int column, bool whiteToMove, bool considerCheck);
+std::unordered_set<ChessMove> getLegalMoves(BoardState board, int row, int column, bool whiteToMove, bool considerCheck, bool threatenOwnPieces = false);
 std::string Move(std::string fen);
 std::unordered_set<ChessMove> getAllLegalMoves(BoardState board, bool whiteToMove, bool considerCheck);
 
@@ -42,7 +37,7 @@ ChessMove getBestMove(std::unordered_set<ChessMove> moves, BoardState board, boo
 
 // needs implementation
 std::unordered_set<minmaxNode*> generateMinmaxChildren(BoardState board);
-int minmax(minmaxNode* node, int depth, int alpha, int beta, bool maximize, bool whiteToMove);
+int minmax(minmaxNode* node, int depth, int alpha, int beta, bool maximize, bool whiteToMove, bool originallyWhite);
 
 
 BoardState getNewBoardStateFromMove(BoardState board, ChessMove move);

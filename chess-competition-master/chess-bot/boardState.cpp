@@ -3,6 +3,15 @@
 
 BoardState::~BoardState() {
 	//delete boardArray;
+
+
+//	int i = 0;
+//	for (Threats* t : boardThreats) {
+//		delete t;
+//		boardThreats.at(i) = nullptr;
+//		i++;
+//	}
+//	boardThreats.clear();
 }
 
 BoardState::BoardState() {
@@ -17,6 +26,13 @@ BoardState::BoardState(std::string fen) {
 	int currentRow = 7;
 	int currentColumn = 0;
 	boardArray.reserve(64);
+	
+//	for (int i = 0; i < 64; i++) {
+//		Threats* t = new Threats;
+//		boardThreats.push_back(t);
+//	}
+
+
 	for (int i = 0; i < fen.length(); i++) {
 		char c = fen.at(i);
 		if (currentColumn > 7) {

@@ -201,6 +201,26 @@ BoardState ChessSimulator::getNewBoardStateFromMove(BoardState board, ChessMove 
 	return newBoard;
 }
 
+
+bool ChessSimulator::squareIsThreatened(BoardState board, int row, int column, bool checkWhite) {
+	std::string pieceColumnString = board.getColumnLetter(column);
+	std::string pieceRowString = std::to_string(row + 1);
+	
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			// get all moves that the enemy piece can do on the new board
+			std::unordered_set<ChessMove> enemyMoves = getLegalMoves(board, i, j, !checkWhite, false);
+			// if any of the moves end on the piece's square, return true
+			for (ChessMove move : enemyMoves) {
+				if (move.to == pieceColumnString + pieceRowString) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 // uses board state and move to calculate new board state
 bool ChessSimulator::kingIsInCheck(BoardState board, ChessMove move, Color color) {
 	// get a potential board state based on the move and see if the king of 'color' is in check
@@ -266,7 +286,6 @@ bool ChessSimulator::kingIsInCheck(BoardState board, bool checkWhite) {
 		}
 	}
 end_loop:
-
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			// get all moves that the enemy piece can do on the new board
@@ -282,7 +301,7 @@ end_loop:
 	return false;
 }
 
-std::unordered_set<ChessMove> ChessSimulator::getLegalMoves(BoardState board, int row, int column, bool whiteToMove, bool considerCheck) {
+std::unordered_set<ChessMove> ChessSimulator::getLegalMoves(BoardState board, int row, int column, bool whiteToMove, bool considerCheck, bool threatenOwnPieces) {
 
 	char piece = board.getPieceAtSquare(row, column);
 	if (!isalpha(piece)) {
@@ -350,7 +369,7 @@ std::unordered_set<ChessMove> ChessSimulator::getLegalMoves(BoardState board, in
 			}
 		}
 		pieceStruct->color = color;
-		moves = pieceStruct->getLegalMoves(row,column,board);
+		moves = pieceStruct->getLegalMoves(row,column,board, threatenOwnPieces);
 		std::unordered_set<ChessMove> toDelete;
 		if (considerCheck) {
 			for (ChessMove move : moves) {
@@ -424,7 +443,7 @@ ChessMove ChessSimulator::getBestMove(std::unordered_set<ChessMove> moves, Board
 	ChessSimulator::minmaxNode* root = new minmaxNode;
 	root->board = board;
 	int depth = 3;
-	int bestValue = ChessSimulator::minmax(root, depth, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), true, whiteToMove);
+	int bestValue = ChessSimulator::minmax(root, depth, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), true, whiteToMove, whiteToMove);
 	ChessMove bestMove;
 
 	for (minmaxNode* child : root->children) {
@@ -456,9 +475,9 @@ function minimax(node, depth, maximizingPlayer) is
 
 // get value of chess move and apply it to node
 // to do: add alpha-beta pruning to make this more efficient
-int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, bool maximize, bool whiteToMove) {
+int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, bool maximize, bool whiteToMove, bool originallyWhite) {
 	if (depth == 0) {
-		node->heuristic = ChessSimulator::getValueOfBoard(node->board, !whiteToMove);
+		node->heuristic = ChessSimulator::getValueOfBoard(node->board, originallyWhite);
 		return node->heuristic;
 	}
 
@@ -468,8 +487,8 @@ int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, boo
 
 	// if there are no moves, get current board value 
 	// (this means checkmate or draw, examine this state carefully)
-	if (moves.empty() || depth == 0) {
-		node->heuristic = ChessSimulator::getValueOfBoard(node->board, !whiteToMove);
+	if (moves.empty()) {
+		node->heuristic = ChessSimulator::getValueOfBoard(node->board, originallyWhite);
 		// if there are no valid moves and moving color piece is in check
 		// return very low value
 		// if non moving color 
@@ -504,7 +523,7 @@ int ChessSimulator::minmax(minmaxNode* node, int depth, int alpha, int beta, boo
 		child->board = nextState;
 		child->move = move;
 
-		int childScore = ChessSimulator::minmax(child, depth - 1, alpha, beta, !maximize, !whiteToMove);
+		int childScore = ChessSimulator::minmax(child, depth - 1, alpha, beta, !maximize, !whiteToMove, originallyWhite);
 		node->children.insert(child);
 
 		if (maximize) {
@@ -535,12 +554,13 @@ int ChessSimulator::getColorScore(BoardState board, bool checkWhite) {
 	int compositionValueFactor = 15;
 	int positionValueFactor = 1;
 
+
 	for (char c : board.boardArray) {
 		int row = boardPosition / 8;
 		int column = boardPosition % 8;
 		int scoreFactor = 1;
 		bool pieceIsWhite = isupper(c);
-		if (isupper(c) != checkWhite){
+		if ((bool)isupper(c) != checkWhite){
 			scoreFactor = -1;
 		}
 		char lower = tolower(c);
@@ -550,7 +570,7 @@ int ChessSimulator::getColorScore(BoardState board, bool checkWhite) {
 		{
 			case 'p':
 				// pawns are worth 1 point overall and give value based on how far they have advanced
-				compositionValue = 1 * compositionValueFactor;
+				compositionValue = 1;
 				if (pieceIsWhite) {
 					positionValue = whitePawnValue[boardPosition];
 				}
@@ -608,6 +628,14 @@ int ChessSimulator::getColorScore(BoardState board, bool checkWhite) {
 		compositionValue *= compositionValueFactor;
 		positionValue *= positionValueFactor;
 
+		bool whiteThreatens = board.boardThreats.at(boardPosition).white;
+		bool blackThreatens = board.boardThreats.at(boardPosition).black;
+
+		// pieces being threatened are bad unless the piece is protected
+		if ((checkWhite && blackThreatens && !whiteThreatens) || (!checkWhite && !blackThreatens && whiteThreatens)) {
+			compositionValue /= 2;
+		}
+
 		total += (compositionValue + positionValue) * scoreFactor;
 		boardPosition++;
 	}
@@ -617,8 +645,22 @@ int ChessSimulator::getColorScore(BoardState board, bool checkWhite) {
 // to do: make this analyze the resulting board state
 int ChessSimulator::getValueOfBoard(BoardState board, bool whiteToMove) {
 	int value = 0;
+
+	for (int row = 0; row < 8; row++) {
+		for (int col = 0; col < 8; col++) {
+			Threats squareThreats;
+			if (squareIsThreatened(board,row,col,false)) {
+				squareThreats.black = true;
+			}
+			if (squareIsThreatened(board,row,col,true)) {
+				squareThreats.white = true;
+			}
+			board.boardThreats.push_back(squareThreats);
+		}
+	}
+
 	if (kingIsInCheck(board, !whiteToMove)) {
-		value += 100;
+		value += 300;
 	}
 	return ChessSimulator::getColorScore(board, whiteToMove);
 }
